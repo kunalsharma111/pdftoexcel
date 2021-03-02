@@ -4,7 +4,9 @@ const pdfparse = require('pdf-parse');
 const xlsx = require('xlsx');
 const path = require('path');
 
-const pdffile = fs.readFileSync('test.pdf');
+const ObjectsToCsv = require('objects-to-csv');
+
+const pdffile = fs.readFileSync('test1.pdf');
 let arr=[];
 pdfparse(pdffile).then(function (data){
     let newData = JSON.stringify(data).replace(/\\n/g, '');
@@ -27,6 +29,7 @@ pdfparse(pdffile).then(function (data){
 
 
     hindu = [];
+    finalHindu = [];
     jatsikh = [];
     divorcee = [];
     doctorEngineer = [];
@@ -56,13 +59,41 @@ pdfparse(pdffile).then(function (data){
         return [h];
     })
     console.log(hdata);
-    const workBook = xlsx.utils.book_new();
-    const workSheetData = [
-        ['list'],
-        hdata
-    ];
-    filePath = './outputFiles/list.xlsx';
-    const workSheet = xlsx.utils.aoa_to_sheet(workSheetData);
-    xlsx.utils.book_append_sheet(workBook,workSheet,"list");
-    xlsx.writeFile(workBook,path.resolve(filePath));
+    // const workBook = xlsx.utils.book_new();
+    // const workSheetData = [
+    //     ['list'],
+    //     hdata
+    // ];
+    for(let i=0;i<hdata.length;i++){
+        let check = String(hdata[i]).replace("-"," ");
+        matches = check.match(/\b\d{5}\b/g);
+        console.log(matches);
+        let count = 1; 
+        for(let j=0;j<matches.length;j++){
+            if(matches.length % 2 == 0){
+                let pn = matches[j]+"-"+matches[j+1];
+                var today = new Date();
+                var dd = String(today.getDate()).padStart(2, '0');
+                var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+                var yyyy = today.getFullYear();
+                today = mm + '/' + dd + '/' + yyyy;
+                let head = (i+1) + today + "H"
+                let number = pn;
+                finalHindu.push({'heading':head,number:pn});
+                j++;
+                count++;
+            }
+        }
+    }
+    console.log(finalHindu);
+    const csv = new ObjectsToCsv(finalHindu);
+ 
+  // Save to file:
+  csv.toDisk('./outputFiles/list.csv');
+ 
+  // Return the CSV file as string:
+    // filePath = './outputFiles/list.xlsx';
+    // const workSheet = xlsx.utils.aoa_to_sheet(workSheetData);
+    // xlsx.utils.book_append_sheet(workBook,workSheet,"list");
+    // xlsx.writeFile(workBook,path.resolve(filePath));
 })
